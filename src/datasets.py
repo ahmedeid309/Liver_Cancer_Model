@@ -41,13 +41,7 @@ def _load_slice(path: str, z: int) -> np.ndarray:
     if arr.ndim > 2:                                 # e.g. RGB or vector
         arr = arr[..., 0]                            # take first component
             # Print only for masks (filename usually contains 'mask')
-    if 'mask' in path.lower():
-        print(f"[DEBUG] Mask slice stats: min={arr.min()}, max={arr.max()}, unique={np.unique(arr)}")
-        max_val = arr.max()
-        if max_val > 0:
-            arr = arr / max_val
-        else:
-            print(f"[WARN] Skipping normalization – mask max is 0 in: {path}")
+   
     
         
 
