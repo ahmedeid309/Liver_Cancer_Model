@@ -14,13 +14,32 @@ def dice_score(pred, target):
 def evaluate_segmentation(model, dataset, device, batch_size=16):
     loader = DataLoader(dataset, batch_size=batch_size)
     model.eval()
-    dices = []
+
+    dice_scores, ious, accs = [], [], []
+
     with torch.no_grad():
-        for x, y in dataset:
-            x, y = x.unsqueeze(0).to(device), y.unsqueeze(0).to(device)
-            pred = model(x)
-            dices.append(dice_score(pred, y).item())
-    print(f"[Validation] Mean Dice Score: {np.mean(dices):.4f}")
+        for x, y in loader:
+            x, y = x.to(device), y.to(device)
+
+            logits = model(x)                  # raw network output
+            probs  = torch.sigmoid(logits)
+            preds  = (probs > 0.5).float()     # binarise
+
+            inter = (preds * y).sum(dim=(1,2,3))
+            preds_sum = preds.sum(dim=(1,2,3))
+            y_sum     = y.sum(dim=(1,2,3))
+
+            dice = (2*inter) / (preds_sum + y_sum + 1e-8)
+            iou  = inter / (preds_sum + y_sum - inter + 1e-8)
+            acc  = (preds == y).float().mean(dim=(1,2,3))
+
+            dice_scores.extend(dice.cpu().tolist())
+            ious.extend(iou.cpu().tolist())
+            accs.extend(acc.cpu().tolist())
+
+    print(f"[Seg] Dice {np.mean(dice_scores):.4f} | IoU {np.mean(ious):.4f} | "
+          f"PixelAcc {np.mean(accs):.4f}")
+
 
 def evaluate_classification(model, dataset, label_encoder, device, batch_size=32):
     loader = DataLoader(dataset, batch_size=batch_size)
@@ -37,4 +56,4 @@ def evaluate_classification(model, dataset, label_encoder, device, batch_size=32
     prec = precision_score(y_true, y_pred, average='macro', zero_division=0)
     rec = recall_score(y_true, y_pred, average='macro', zero_division=0)
 
-    print(f"[Validation] Accuracy: {acc:.4f}  Precision: {prec:.4f}  Recall: {rec:.4f}")
+    print(f"[Classification Accuracy: {acc:.4f}  Precision: {prec:.4f}  Recall: {rec:.4f}")
