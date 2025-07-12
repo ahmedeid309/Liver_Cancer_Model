@@ -36,6 +36,10 @@ print(f"Running on: {DEVICE}\n")
 ) = load_and_split_data_from_paths(
         args.csv_path, args.ct_folder, args.mask_folder
 )
+print("Label mapping (index → cancer type):")
+for idx, name in enumerate(label_encoder.classes_):
+    print(f"  {idx}: {name}")
+
 
 # --------------------------------------------------------------------------- #
 # 2) Datasets & loaders                                                       #
