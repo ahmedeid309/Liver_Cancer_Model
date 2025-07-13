@@ -13,8 +13,18 @@ import torch
 from scipy.ndimage import label
 from skimage.transform import resize
 
-from src.models import UNet2D, Simple2DClassifier
+from models import UNet2D, Simple2DClassifier
 from inference_utils import load_volume, slice_batch_to_tensor
+
+# -----------------------------------------------------------------------------
+# Descriptions
+# -----------------------------------------------------------------------------
+LONG_LABELS = ["Combined Hepatocellular-Cholangiocarcinoma","Cystic Neoplasm","Hepatocellular Carcinoma","Intrahepatic Cholangiocarcinoma"]
+DESCRIPTIONS = ["Combined hepatocellular-cholangiocarcinoma (CHCC) is a rare and complex liver cancer that exhibits histological features of both HCC and ICC. This hybrid tumor is thought to arise from hepatic progenitor cells and shares risk factors with both tumor types, including cirrhosis, hepatitis infections, and chronic liver inflammation. Patients may experience symptoms such as abdominal discomfort, fatigue, weight loss, and jaundice. CHCC is particularly challenging to diagnose and treat due to its mixed cellular composition and often exhibits more aggressive behavior than either HCC or ICC alone. Treatment strategies are typically multimodal, involving surgery, chemotherapy, and targeted therapies, but prognosis remains poor in advanced stages.",
+                "Cystic neoplasms (CNs) of the liver are a group of rare, potentially malignant cystic tumors that include biliary cystadenomas and cystadenocarcinomas. These lesions often present as incidental findings during imaging but may cause symptoms such as abdominal fullness, pain, or nausea when large. While many cystic lesions are benign, some have the potential to become malignant, especially if they are multilocular or exhibit mural nodules. Risk factors are less well-defined but may include congenital biliary malformations or chronic irritation of the bile ducts. Complete surgical removal is usually recommended to prevent malignant transformation. Early diagnosis and resection generally offer an excellent prognosis.",
+                "Hepatocellular carcinoma (HCC) is the most common type of primary liver cancer, typically arising in the setting of chronic liver disease. It is strongly associated with cirrhosis, chronic hepatitis B or C infections, alcohol abuse, and non-alcoholic fatty liver disease (NAFLD). Symptoms often include abdominal pain, weight loss, fatigue, jaundice, and a palpable mass in the upper right abdomen. HCC is considered highly aggressive due to its tendency to invade blood vessels and metastasize. Early detection is critical, as prognosis worsens significantly in advanced stages. Treatment options include surgical resection, liver transplantation, local ablation, and systemic therapies such as targeted drugs or immunotherapy.",
+                "Intrahepatic cholangiocarcinoma (ICC) is a malignant tumor that originates in the bile ducts within the liver. It is the second most common primary liver cancer and often presents with nonspecific symptoms such as right upper quadrant pain, jaundice, weight loss, and fatigue. Risk factors include primary sclerosing cholangitis, liver fluke infections (e.g., Opisthorchis, Clonorchis), chronic biliary inflammation, and certain congenital bile duct anomalies. ICC is typically diagnosed at a late stage due to its subtle onset and aggressive nature, making it difficult to treat. Surgical resection offers the best chance for survival, but many cases require systemic chemotherapy or palliative care."
+                ]
 
 # -----------------------------------------------------------------------------
 # Configuration
@@ -136,20 +146,6 @@ if uploaded_file:
     patch = extract_patch(slice_img, mask_largest)
     tumor_present_slice = mask_pred.sum() > 0
 
- 
-
-    # -------------------------------------------------------------------------
-    # Subtype classification (optional)                                        
-    # -------------------------------------------------------------------------
-    if tumor_present_volume:
-        probs_cls = run_classification(clf_model, slice_img)  # could also use patch
-        pred_cls = int(np.argmax(probs_cls))
-        st.subheader("Classification (subtype, slice‑level)")
-        st.markdown(f"- **Predicted class:** `{LABELS[pred_cls]}`")
-        st.markdown(f"- **Confidence:** `{probs_cls[pred_cls] * 100:.2f}%`")
-    else:
-        st.info("No tumour detected in volume – subtype classification skipped.")
-
     # -------------------------------------------------------------------------
     # Visualisation                                                            
     # -------------------------------------------------------------------------
@@ -160,3 +156,18 @@ if uploaded_file:
     for ax in axs:
         ax.axis("off")
     st.pyplot(fig)
+
+    # -------------------------------------------------------------------------
+    # Subtype classification (optional)                                        
+    # -------------------------------------------------------------------------
+    if tumor_present_volume:
+        probs_cls = run_classification(clf_model, slice_img)  # could also use patch
+        pred_cls = int(np.argmax(probs_cls))
+        st.subheader(f"Classification (subtype, slice‑level) - `{LABELS[pred_cls]}`")
+        st.subheader(f"Predicted class: `{LONG_LABELS[pred_cls]}` with Confidence `{probs_cls[pred_cls] * 100:.2f}%`")
+        # st.markdown(f"**`{LABELS[pred_cls]}`**")
+        st.write(DESCRIPTIONS[pred_cls])
+    else:
+        st.info("No tumour detected in volume – subtype classification skipped.")
+
+   
