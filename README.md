@@ -34,6 +34,31 @@ Liver_Cancer_Model/
 ```
 ---
 
+## 📦 Key Packages
+
+- `torch`, `torchvision`, `monai` – Core deep learning and medical imaging
+- `nibabel` – Handling NIfTI medical image files
+- `scikit-learn`, `pandas`, `numpy` – Data processing and ML utilities
+- `matplotlib`, `altair`, `pydeck` – Visualization
+- `streamlit` – Real-time user interface
+- `tqdm` – Progress bars for training loops
+- `GitPython`, `jsonschema`, `attrs`, `blinker`, etc. – Utility and I/O support
+
+---
+## Dataset Structure
+
+```
+data/
+├── ct_files/
+│   ├── P0001_ct_P.nii.gz
+│   └── ...
+├── mask_files/
+│   ├── P0001_mask_P.nii.gz
+│   └── ...
+└── patient_data.csv
+```
+---
+
 ## 🚀 How to Run the Project
 
 ### 1. Clone the Repository
